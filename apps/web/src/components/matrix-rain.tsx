@@ -10,7 +10,6 @@ const CHARS =
   "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789@#$%&";
 const COLUMN_COUNT = 60;
 const CHARS_PER_COLUMN = 20;
-const TOTAL_CHARS = COLUMN_COUNT * CHARS_PER_COLUMN;
 const SPREAD_X = 40;
 const SPREAD_Z = 50;
 const FALL_SPEED_MIN = 2;
@@ -38,18 +37,23 @@ function createCharTexture(char: string): THREE.Texture {
 }
 
 export function MatrixRain() {
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  const columnCount = isMobile ? 25 : COLUMN_COUNT;
+  const charsPerColumn = isMobile ? 12 : CHARS_PER_COLUMN;
+  const totalChars = columnCount * charsPerColumn;
+
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const dummy = useMemo(() => new THREE.Object3D(), []);
 
   // Pre-generate per-instance data
   const instanceData = useMemo(() => {
     const data = [];
-    for (let col = 0; col < COLUMN_COUNT; col++) {
-      const x = (col / COLUMN_COUNT - 0.5) * SPREAD_X;
-      for (let row = 0; row < CHARS_PER_COLUMN; row++) {
+    for (let col = 0; col < columnCount; col++) {
+      const x = (col / columnCount - 0.5) * SPREAD_X;
+      for (let row = 0; row < charsPerColumn; row++) {
         data.push({
           x,
-          y: (row / CHARS_PER_COLUMN) * SPREAD_Z - SPREAD_Z * Math.random(),
+          y: (row / charsPerColumn) * SPREAD_Z - SPREAD_Z * Math.random(),
           z: -Math.random() * SPREAD_Z,
           speed: FALL_SPEED_MIN + Math.random() * (FALL_SPEED_MAX - FALL_SPEED_MIN),
           opacity: 0.1 + Math.random() * 0.9,
@@ -68,8 +72,8 @@ export function MatrixRain() {
 
   // Per-instance colors for varying opacity (reserved for future vertex color wiring)
   const _colors = useMemo(() => {
-    const arr = new Float32Array(TOTAL_CHARS * 3);
-    for (let i = 0; i < TOTAL_CHARS; i++) {
+    const arr = new Float32Array(totalChars * 3);
+    for (let i = 0; i < totalChars; i++) {
       const d = instanceData[i]!;
       // Green channel varies by opacity, slight tint variation
       arr[i * 3] = 0;
@@ -89,7 +93,7 @@ export function MatrixRain() {
     // Speed modifier
     const speedMod = 1 - scrollProgress * 0.3;
 
-    for (let i = 0; i < TOTAL_CHARS; i++) {
+    for (let i = 0; i < totalChars; i++) {
       const d = instanceData[i]!;
 
       // Skip some instances based on density
@@ -124,7 +128,7 @@ export function MatrixRain() {
   });
 
   return (
-    <instancedMesh ref={meshRef} args={[undefined, undefined, TOTAL_CHARS]}>
+    <instancedMesh ref={meshRef} args={[undefined, undefined, totalChars]}>
       <planeGeometry args={[0.5, 0.8]} />
       <meshBasicMaterial
         map={texture}
