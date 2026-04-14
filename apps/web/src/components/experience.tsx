@@ -10,22 +10,34 @@ interface TimelineEntry {
 
 const TIMELINE: TimelineEntry[] = [
   {
-    period: "2023 — teraz",
-    role: "Fullstack Developer",
-    company: "Projekty komercyjne & freelance",
-    tech: ["React", "Next.js", "TypeScript", "Tailwind CSS", "React Native"],
+    period: "kwi 2025 — teraz",
+    role: "Frontend Developer",
+    company: "Ideo Software",
+    tech: ["React", "TypeScript", "Tailwind CSS"],
   },
   {
-    period: "2022 — 2023",
-    role: "Full Stack Developer",
-    company: "Projekty z Angular, Vue, NestJS",
-    tech: ["Angular", "Vue", "Nuxt", "NestJS", "Docker", "SQL"],
+    period: "cze 2024 — mar 2025",
+    role: "Frontend Developer",
+    company: "Seth Software",
+    tech: ["React", "TypeScript", "Next.js"],
   },
   {
-    period: "2021 — 2022",
-    role: "Junior Developer",
-    company: "Nauka & pierwsze projekty",
-    tech: ["JavaScript", "React", "Laravel", "PHP", "MySQL"],
+    period: "mar 2024 — maj 2024",
+    role: "Intern — Junior Frontend Developer",
+    company: "Seth Software",
+    tech: ["React", "TypeScript"],
+  },
+  {
+    period: "lip 2023 — wrz 2023",
+    role: "Praktykant — React Developer",
+    company: "Mobitouch",
+    tech: ["React", "JavaScript"],
+  },
+  {
+    period: "mar 2023 — kwi 2023",
+    role: "Praktykant — React Developer",
+    company: "Mobitouch",
+    tech: ["React", "JavaScript"],
   },
 ];
 
