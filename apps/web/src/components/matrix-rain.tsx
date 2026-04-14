@@ -1,39 +1,56 @@
-// apps/web/src/components/matrix-rain.tsx
 import { useFrame } from "@react-three/fiber";
-import { useEffect, useMemo, useRef } from "react";
+import { useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import { useScrollStore } from "@/lib/scroll-store";
 
-// Characters: katakana range + digits + some symbols
 const CHARS =
   "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789@#$%&";
 const COLUMN_COUNT = 60;
 const CHARS_PER_COLUMN = 20;
 const SPREAD_X = 40;
-const SPREAD_Z = 50;
+const DEPTH = 50;
 const FALL_SPEED_MIN = 2;
 const FALL_SPEED_MAX = 8;
 
-/** Generate a canvas texture with a single character */
-function createCharTexture(char: string): THREE.Texture {
-  const size = 64;
+/**
+ * Build a texture atlas: a grid of characters on a single canvas.
+ * Each cell is 64×64. Layout: 10 columns, as many rows as needed.
+ */
+function buildAtlas(chars: string) {
+  const cellSize = 64;
+  const cols = 10;
+  const rows = Math.ceil(chars.length / cols);
   const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
+  canvas.width = cellSize * cols;
+  canvas.height = cellSize * rows;
   const ctx = canvas.getContext("2d")!;
 
-  ctx.fillStyle = "transparent";
-  ctx.fillRect(0, 0, size, size);
-  ctx.font = `${size * 0.7}px monospace`;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.font = `bold ${cellSize * 0.6}px monospace`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillStyle = "#00ff41";
-  ctx.fillText(char, size / 2, size / 2);
+
+  for (let i = 0; i < chars.length; i++) {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    ctx.fillText(chars[i]!, col * cellSize + cellSize / 2, row * cellSize + cellSize / 2);
+  }
 
   const texture = new THREE.CanvasTexture(canvas);
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
   texture.needsUpdate = true;
-  return texture;
+  return { texture, cols, rows, cellSize, totalCells: chars.length };
+}
+
+interface Particle {
+  x: number;
+  y: number;
+  z: number;
+  speed: number;
+  brightness: number;
 }
 
 export function MatrixRain() {
@@ -45,106 +62,121 @@ export function MatrixRain() {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const dummy = useMemo(() => new THREE.Object3D(), []);
 
-  // Pre-generate per-instance data
-  const instanceData = useMemo(() => {
-    const data = [];
+  const particles = useMemo<Particle[]>(() => {
+    const arr: Particle[] = [];
     for (let col = 0; col < columnCount; col++) {
       const x = (col / columnCount - 0.5) * SPREAD_X;
       for (let row = 0; row < charsPerColumn; row++) {
-        data.push({
+        arr.push({
           x,
-          y: (row / charsPerColumn) * SPREAD_Z - SPREAD_Z * Math.random(),
-          z: -Math.random() * SPREAD_Z,
+          y: Math.random() * DEPTH - DEPTH / 2,
+          z: -Math.random() * DEPTH,
           speed: FALL_SPEED_MIN + Math.random() * (FALL_SPEED_MAX - FALL_SPEED_MIN),
-          opacity: 0.1 + Math.random() * 0.9,
-          charIndex: Math.floor(Math.random() * CHARS.length),
+          brightness: 0.15 + Math.random() * 0.85,
         });
       }
     }
-    return data;
-  }, []);
-
-  // Create a shared texture atlas (single character for simplicity, rotated per instance)
-  const texture = useMemo(() => {
-    const randomChar = CHARS[Math.floor(Math.random() * CHARS.length)]!;
-    return createCharTexture(randomChar);
-  }, []);
-
-  // Set per-instance colors on the mesh once it's ready
-  const colors = useMemo(() => {
-    const arr = new Float32Array(totalChars * 3);
-    for (let i = 0; i < totalChars; i++) {
-      const d = instanceData[i]!;
-      arr[i * 3] = 0;
-      arr[i * 3 + 1] = d.opacity;
-      arr[i * 3 + 2] = d.opacity * 0.25;
-    }
     return arr;
-  }, [instanceData, totalChars]);
+  }, [columnCount, charsPerColumn]);
 
-  // Wire up instance colors to the mesh
-  useEffect(() => {
-    const mesh = meshRef.current;
-    if (!mesh) return;
-    mesh.instanceColor = new THREE.InstancedBufferAttribute(colors, 3);
-    mesh.instanceColor.needsUpdate = true;
-  }, [colors]);
+  // Build atlas and UV-offset attribute for random characters per instance
+  const { atlas, uvOffsets } = useMemo(() => {
+    const a = buildAtlas(CHARS);
+    // Each instance gets a random character → UV offset into the atlas
+    const offsets = new Float32Array(totalChars * 2);
+    const uSize = 1 / a.cols;
+    const vSize = 1 / a.rows;
+    for (let i = 0; i < totalChars; i++) {
+      const charIdx = Math.floor(Math.random() * a.totalCells);
+      const col = charIdx % a.cols;
+      const row = Math.floor(charIdx / a.cols);
+      offsets[i * 2] = col * uSize;
+      offsets[i * 2 + 1] = 1 - (row + 1) * vSize; // flip Y
+    }
+    return { atlas: a, uvOffsets: offsets };
+  }, [totalChars]);
 
+  // Custom shader material for atlas UV + per-instance brightness
+  const material = useMemo(() => {
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        uAtlas: { value: atlas.texture },
+        uCellSize: { value: new THREE.Vector2(1 / atlas.cols, 1 / atlas.rows) },
+      },
+      vertexShader: `
+        attribute vec2 aUvOffset;
+        attribute float aBrightness;
+        varying vec2 vUv;
+        varying float vBrightness;
+        void main() {
+          vUv = uv * uCellSize + aUvOffset;
+          vBrightness = aBrightness;
+          gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D uAtlas;
+        uniform vec2 uCellSize;
+        varying vec2 vUv;
+        varying float vBrightness;
+        void main() {
+          vec4 tex = texture2D(uAtlas, vUv);
+          if (tex.a < 0.1) discard;
+          gl_FragColor = vec4(tex.rgb * vBrightness, tex.a * vBrightness);
+        }
+      `,
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    });
+  }, [atlas]);
+
+  // Set up instanced attributes once mesh is available
+  const attrsSet = useRef(false);
   useFrame((state, delta) => {
     const mesh = meshRef.current;
     if (!mesh) return;
 
+    // Attach custom instanced attributes on first frame
+    if (!attrsSet.current) {
+      const geo = mesh.geometry;
+      geo.setAttribute("aUvOffset", new THREE.InstancedBufferAttribute(uvOffsets, 2));
+      const brightnessArr = new Float32Array(totalChars);
+      for (let i = 0; i < totalChars; i++) {
+        brightnessArr[i] = particles[i]!.brightness;
+      }
+      geo.setAttribute("aBrightness", new THREE.InstancedBufferAttribute(brightnessArr, 1));
+      attrsSet.current = true;
+    }
+
     const { scrollProgress, mouseX, mouseY } = useScrollStore.getState();
-    // Reduce density as user scrolls (skip more chars)
-    const densityFactor = 1 - scrollProgress * 0.4;
-    // Speed modifier
     const speedMod = 1 - scrollProgress * 0.3;
 
     for (let i = 0; i < totalChars; i++) {
-      const d = instanceData[i]!;
+      const p = particles[i]!;
 
-      // Skip some instances based on density
-      if (d.opacity < 1 - densityFactor) {
-        dummy.position.set(0, -9999, 0);
-        dummy.scale.setScalar(0);
-        dummy.updateMatrix();
-        mesh.setMatrixAt(i, dummy.matrix);
-        continue;
+      p.y -= p.speed * delta * speedMod;
+
+      if (p.y < -DEPTH / 2) {
+        p.y = DEPTH / 2 + Math.random() * 10;
       }
 
-      // Fall downward
-      d.y -= d.speed * delta * speedMod;
-
-      // Reset when fallen past camera
-      if (d.y < -SPREAD_Z / 2) {
-        d.y = SPREAD_Z / 2 + Math.random() * 10;
-        d.charIndex = Math.floor(Math.random() * CHARS.length);
-      }
-
-      dummy.position.set(d.x + mouseX * 0.5, d.y, d.z);
-      dummy.scale.setScalar(0.3);
+      dummy.position.set(p.x + mouseX * 0.5, p.y, p.z);
+      dummy.scale.setScalar(0.35);
       dummy.updateMatrix();
       mesh.setMatrixAt(i, dummy.matrix);
     }
 
     mesh.instanceMatrix.needsUpdate = true;
 
-    // Subtle camera sway based on mouse
+    // Camera parallax from mouse
     state.camera.rotation.y = THREE.MathUtils.lerp(state.camera.rotation.y, mouseX * 0.05, 0.05);
     state.camera.rotation.x = THREE.MathUtils.lerp(state.camera.rotation.x, mouseY * 0.03, 0.05);
   });
 
   return (
-    <instancedMesh ref={meshRef} args={[undefined, undefined, totalChars]}>
+    <instancedMesh ref={meshRef} args={[undefined, undefined, totalChars]} material={material}>
       <planeGeometry args={[0.5, 0.8]} />
-      <meshBasicMaterial
-        map={texture}
-        transparent
-        opacity={0.9}
-        side={THREE.DoubleSide}
-        depthWrite={false}
-        vertexColors
-      />
     </instancedMesh>
   );
 }
