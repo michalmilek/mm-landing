@@ -13,30 +13,28 @@ interface Project {
 
 const PROJECTS: Project[] = [
   {
-    name: "projekt-alpha",
-    description: "Opis projektu alpha — co robi, jaki problem rozwiązuje.",
-    tech: ["React", "TypeScript", "Three.js"],
-    github: "https://github.com/",
-    live: "https://example.com",
+    name: "laravel-react",
+    description: "Full-stack aplikacja z Laravelem jako backend i React jako frontend. TypeScript.",
+    tech: ["Laravel", "React", "TypeScript"],
+    github: "https://github.com/michalmilek/laravel-react",
   },
   {
-    name: "projekt-beta",
-    description: "Opis projektu beta — co robi, jaki problem rozwiązuje.",
-    tech: ["Node.js", "Docker", "PostgreSQL"],
-    github: "https://github.com/",
+    name: "music-player",
+    description: "Player muzyczny — odtwarzanie, playlisty, zarządzanie biblioteką utworów.",
+    tech: ["React", "TypeScript", "Tailwind CSS"],
+    github: "https://github.com/michalmilek/music-player",
   },
   {
-    name: "projekt-gamma",
-    description: "Opis projektu gamma — co robi, jaki problem rozwiązuje.",
-    tech: ["Python", "FastAPI", "Redis"],
-    github: "https://github.com/",
-    live: "https://example.com",
+    name: "portfolio-neobrutalism",
+    description: "Portfolio w stylu neobrutalizm — odważny design, mocne kolory, typografia.",
+    tech: ["React", "CSS", "Neobrutalism"],
+    github: "https://github.com/michalmilek/portfolio-neobrutalism",
   },
   {
-    name: "projekt-delta",
-    description: "Opis projektu delta — co robi, jaki problem rozwiązuje.",
-    tech: ["Rust", "WASM", "WebGPU"],
-    github: "https://github.com/",
+    name: "mm-landing",
+    description: "Ten landing! Matrix Rain 3D, TanStack Start SSR, MDX blog. Three.js goes brrr.",
+    tech: ["React", "Three.js", "TanStack Start", "Tailwind"],
+    github: "https://github.com/michalmilek/mm-landing",
   },
 ];
 

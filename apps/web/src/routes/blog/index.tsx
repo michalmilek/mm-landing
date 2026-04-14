@@ -12,7 +12,7 @@ export const Route = createFileRoute("/blog/")({
   },
   head: () => ({
     meta: [
-      { title: "Blog — tw0j_nick" },
+      { title: "Blog — michalmilek" },
       { name: "description", content: "Posty o programowaniu, technologii i open source." },
     ],
   }),

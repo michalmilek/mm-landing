@@ -49,7 +49,7 @@ export function Nav() {
       <div className="mx-auto max-w-6xl flex items-center justify-between px-4 py-3">
         {/* Logo / nick */}
         <Link to="/" className="font-mono text-sm font-bold text-matrix text-glow">
-          &lt;nick /&gt;
+          &lt;michalmilek /&gt;
         </Link>
 
         {/* Desktop links */}

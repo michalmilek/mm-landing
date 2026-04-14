@@ -1,12 +1,9 @@
-import fs from "node:fs";
-import path from "node:path";
-
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { type ComponentType, lazy, Suspense, useMemo } from "react";
 
 import { SectionHeading } from "@/components/section-heading";
-import { parseFrontmatter } from "@/lib/blog";
+import { getPostMeta } from "@/lib/blog";
 
 // MDX module loaders — used client-side for rendering
 const mdxModules = import.meta.glob("/src/content/blog/*.mdx") as Record<
@@ -15,29 +12,26 @@ const mdxModules = import.meta.glob("/src/content/blog/*.mdx") as Record<
 >;
 
 export const Route = createFileRoute("/blog/$slug")({
-  loader: ({ params }) => {
+  loader: async ({ params }) => {
     const { slug } = params;
 
-    // Check the MDX module exists
+    // Check the MDX module exists (client-safe — import.meta.glob is resolved at build time)
     const modulePath = `/src/content/blog/${slug}.mdx`;
     if (!mdxModules[modulePath]) {
       throw notFound();
     }
 
-    // Read raw file for frontmatter (server-side only)
-    const filePath = path.resolve(import.meta.dirname, "../../content/blog", `${slug}.mdx`);
-    if (!fs.existsSync(filePath)) {
+    // Read frontmatter via server function (fs/path stay on the server)
+    const meta = await getPostMeta({ data: slug });
+    if (!meta) {
       throw notFound();
     }
-    const raw = fs.readFileSync(filePath, "utf-8");
-    const meta = parseFrontmatter(raw, slug);
 
-    // Only return serializable data
     return { meta };
   },
   head: ({ loaderData }) => ({
     meta: [
-      { title: `${loaderData?.meta.title ?? "Post"} — tw0j_nick` },
+      { title: `${loaderData?.meta.title ?? "Post"} — michalmilek` },
       { name: "description", content: loaderData?.meta.description ?? "" },
     ],
   }),

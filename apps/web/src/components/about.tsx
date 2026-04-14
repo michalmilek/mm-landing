@@ -10,13 +10,13 @@ export function About() {
           <div className="flex flex-col md:flex-row gap-8">
             <div className="flex-1 space-y-4 text-foreground/80 leading-relaxed">
               <p>
-                Cześć! Jestem developerem z pasją do budowania rzeczy, które działają szybko i
-                wyglądają dobrze. Specjalizuję się w full-stack web development z naciskiem na
-                TypeScript, React i Node.js.
+                Cześć! Jestem Michał — frontend developer z Rzeszowa. Specjalizuję się w React,
+                TypeScript i Next.js. Buduję szybkie, responsywne aplikacje webowe z naciskiem na UX
+                i czysty kod.
               </p>
               <p>
-                Kiedy nie koduję, kontrybuuję do open source i eksperymentuję z nowymi
-                technologiami. Ten landing? Zbudowałem go z Three.js, bo dlaczego nie.
+                Mam doświadczenie z szerokim stackiem — od React Native i Angular po Vue, Nuxt,
+                NestJS i Laravel. Ten landing? Zbudowałem go z Three.js, bo dlaczego nie.
               </p>
             </div>
             <div className="flex-shrink-0">

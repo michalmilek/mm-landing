@@ -10,22 +10,22 @@ interface TimelineEntry {
 
 const TIMELINE: TimelineEntry[] = [
   {
-    period: "2024 — teraz",
-    role: "Senior Developer",
-    company: "Firma A",
-    tech: ["React", "TypeScript", "Node.js", "AWS"],
+    period: "2023 — teraz",
+    role: "Frontend Developer",
+    company: "Projekty komercyjne & freelance",
+    tech: ["React", "Next.js", "TypeScript", "Tailwind CSS", "React Native"],
   },
   {
-    period: "2022 — 2024",
-    role: "Mid Developer",
-    company: "Firma B",
-    tech: ["Vue", "Python", "Docker", "PostgreSQL"],
+    period: "2022 — 2023",
+    role: "Full Stack Developer",
+    company: "Projekty z Angular, Vue, NestJS",
+    tech: ["Angular", "Vue", "Nuxt", "NestJS", "Docker", "SQL"],
   },
   {
-    period: "2020 — 2022",
+    period: "2021 — 2022",
     role: "Junior Developer",
-    company: "Startup C",
-    tech: ["JavaScript", "PHP", "MySQL"],
+    company: "Nauka & pierwsze projekty",
+    tech: ["JavaScript", "React", "Laravel", "PHP", "MySQL"],
   },
 ];
 
