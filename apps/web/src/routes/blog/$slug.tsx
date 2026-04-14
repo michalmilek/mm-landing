@@ -1,39 +1,39 @@
+import fs from "node:fs";
+import path from "node:path";
+
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
+import { type ComponentType, lazy, Suspense, useMemo } from "react";
 
 import { SectionHeading } from "@/components/section-heading";
 import { parseFrontmatter } from "@/lib/blog";
 
-// Eagerly import all mdx modules and their raw sources
-const mdxModules = import.meta.glob("/src/content/blog/*.mdx");
-const mdxRaw = import.meta.glob("/src/content/blog/*.mdx", {
-  query: "?raw",
-  import: "default",
-});
+// MDX module loaders — used client-side for rendering
+const mdxModules = import.meta.glob("/src/content/blog/*.mdx") as Record<
+  string,
+  () => Promise<{ default: ComponentType }>
+>;
 
 export const Route = createFileRoute("/blog/$slug")({
-  loader: async ({ params }) => {
+  loader: ({ params }) => {
     const { slug } = params;
+
+    // Check the MDX module exists
     const modulePath = `/src/content/blog/${slug}.mdx`;
-
-    const loadModule = mdxModules[modulePath];
-    const loadRaw = mdxRaw[modulePath];
-
-    if (!loadModule || !loadRaw) {
+    if (!mdxModules[modulePath]) {
       throw notFound();
     }
 
-    const [mod, raw] = await Promise.all([
-      loadModule() as Promise<{ default: React.ComponentType }>,
-      loadRaw() as Promise<string>,
-    ]);
-
+    // Read raw file for frontmatter (server-side only)
+    const filePath = path.resolve(import.meta.dirname, "../../content/blog", `${slug}.mdx`);
+    if (!fs.existsSync(filePath)) {
+      throw notFound();
+    }
+    const raw = fs.readFileSync(filePath, "utf-8");
     const meta = parseFrontmatter(raw, slug);
 
-    return {
-      Component: mod.default,
-      meta,
-    };
+    // Only return serializable data
+    return { meta };
   },
   head: ({ loaderData }) => ({
     meta: [
@@ -50,7 +50,18 @@ export const Route = createFileRoute("/blog/$slug")({
 });
 
 function BlogPost() {
-  const { Component, meta } = Route.useLoaderData();
+  const { meta } = Route.useLoaderData();
+
+  // Lazy-load the MDX component on the client
+  const MdxContent = useMemo(
+    () =>
+      lazy(async () => {
+        const modulePath = `/src/content/blog/${meta.slug}.mdx`;
+        const mod = await mdxModules[modulePath]!();
+        return { default: mod.default };
+      }),
+    [meta.slug],
+  );
 
   return (
     <div className="relative z-10 min-h-screen pt-24 pb-20 px-4">
@@ -85,7 +96,11 @@ function BlogPost() {
           </div>
 
           <div className="prose prose-invert prose-sm max-w-none prose-headings:font-mono prose-headings:text-matrix prose-code:text-matrix prose-a:text-matrix prose-pre:bg-[#0d0d0d] prose-pre:border prose-pre:border-matrix-border">
-            <Component />
+            <Suspense
+              fallback={<p className="font-mono text-matrix/40 animate-pulse">Ładowanie...</p>}
+            >
+              <MdxContent />
+            </Suspense>
           </div>
         </article>
       </div>

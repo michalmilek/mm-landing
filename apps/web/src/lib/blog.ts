@@ -1,14 +1,7 @@
-import matter from "gray-matter";
+import fs from "node:fs";
+import path from "node:path";
 
-export interface BlogPost {
-  slug: string;
-  title: string;
-  date: string;
-  description: string;
-  tags: string[];
-  readingTime: string;
-  content: string;
-}
+import matter from "gray-matter";
 
 export interface BlogPostMeta {
   slug: string;
@@ -40,22 +33,23 @@ export function parseFrontmatter(raw: string, slug: string): BlogPostMeta {
 }
 
 /**
- * Load all blog post metadata at build time.
- * Uses Vite's import.meta.glob to find all .mdx files.
+ * Load all blog post metadata.
+ * Reads .mdx files directly from the filesystem (runs server-side in loaders).
  */
-export async function getAllPosts(): Promise<BlogPostMeta[]> {
-  const modules = import.meta.glob("/src/content/blog/*.mdx", {
-    query: "?raw",
-    import: "default",
-  });
+export function getAllPosts(): BlogPostMeta[] {
+  const contentDir = path.resolve(import.meta.dirname, "../content/blog");
 
-  const posts: BlogPostMeta[] = [];
-
-  for (const [path, loader] of Object.entries(modules)) {
-    const raw = (await loader()) as string;
-    const slug = path.split("/").pop()!.replace(".mdx", "");
-    posts.push(parseFrontmatter(raw, slug));
+  if (!fs.existsSync(contentDir)) {
+    return [];
   }
+
+  const files = fs.readdirSync(contentDir).filter((f) => f.endsWith(".mdx"));
+
+  const posts: BlogPostMeta[] = files.map((file) => {
+    const raw = fs.readFileSync(path.join(contentDir, file), "utf-8");
+    const slug = file.replace(".mdx", "");
+    return parseFrontmatter(raw, slug);
+  });
 
   // Sort by date descending
   posts.sort((a, b) => (a.date > b.date ? -1 : 1));
