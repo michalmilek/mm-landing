@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 
-import { BlogPostMeta } from "@/lib/blog";
+import type { BlogPostMeta } from "@/lib/blog";
 import { ScrollFadeIn } from "./scroll-fade-in";
 import { SectionHeading } from "./section-heading";
 
