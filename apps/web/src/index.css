@@ -1,1 +1,23 @@
+@import "@fontsource-variable/jetbrains-mono";
 @import "@mm-landing/ui/globals.css";
+
+/* Matrix-specific utilities */
+@layer utilities {
+  .text-glow {
+    text-shadow:
+      0 0 10px var(--matrix-glow),
+      0 0 30px var(--matrix-glow);
+  }
+
+  .box-glow {
+    box-shadow:
+      0 0 15px var(--matrix-glow),
+      0 0 30px oklch(0.84 0.29 142 / 20%);
+  }
+
+  .glass-panel {
+    background: var(--panel);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+}
