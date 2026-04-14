@@ -1,34 +1,34 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { About } from "@/components/about";
+import { BlogPreview } from "@/components/blog-preview";
+import { ContactForm } from "@/components/contact-form";
+import { Experience } from "@/components/experience";
+import { Hero } from "@/components/hero";
+import { Projects } from "@/components/projects";
+
 export const Route = createFileRoute("/")({
-  component: HomeComponent,
+  component: LandingPage,
+  head: () => ({
+    meta: [
+      { title: "tw0j_nick — Developer Portfolio" },
+      {
+        name: "description",
+        content: "Full Stack Developer · Open Source · Matrix Enthusiast",
+      },
+    ],
+  }),
 });
 
-const TITLE_TEXT = `
- ██████╗ ███████╗████████╗████████╗███████╗██████╗
- ██╔══██╗██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗
- ██████╔╝█████╗     ██║      ██║   █████╗  ██████╔╝
- ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██╗
- ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║
- ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝
-
- ████████╗    ███████╗████████╗ █████╗  ██████╗██╗  ██╗
- ╚══██╔══╝    ██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝
-    ██║       ███████╗   ██║   ███████║██║     █████╔╝
-    ██║       ╚════██║   ██║   ██╔══██║██║     ██╔═██╗
-    ██║       ███████║   ██║   ██║  ██║╚██████╗██║  ██╗
-    ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
- `;
-
-function HomeComponent() {
+function LandingPage() {
   return (
-    <div className="container mx-auto max-w-3xl px-4 py-2">
-      <pre className="overflow-x-auto font-mono text-sm">{TITLE_TEXT}</pre>
-      <div className="grid gap-6">
-        <section className="rounded-lg border p-4">
-          <h2 className="mb-2 font-medium">API Status</h2>
-        </section>
-      </div>
-    </div>
+    <>
+      <Hero />
+      <About />
+      <Experience />
+      <Projects />
+      <BlogPreview />
+      <ContactForm />
+    </>
   );
 }
