@@ -18,11 +18,7 @@ export function Hero() {
       </h1>
       <p className="text-lg text-foreground/70 mb-4">Michał Miłek</p>
       <div className="text-sm text-matrix/80 mb-8 h-6">
-        <Typewriter
-          text="Fullstack Developer · React · TypeScript · Poland"
-          speed={40}
-          delay={500}
-        />
+        <Typewriter text="Fullstack Developer · Poland" speed={40} delay={500} />
       </div>
       <div className="flex gap-3">
         {SOCIAL_LINKS.map(({ icon: Icon, href, label }) => (
