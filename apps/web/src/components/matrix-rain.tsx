@@ -1,6 +1,6 @@
 // apps/web/src/components/matrix-rain.tsx
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import { useScrollStore } from "@/lib/scroll-store";
@@ -70,18 +70,25 @@ export function MatrixRain() {
     return createCharTexture(randomChar);
   }, []);
 
-  // Per-instance colors for varying opacity (reserved for future vertex color wiring)
-  const _colors = useMemo(() => {
+  // Set per-instance colors on the mesh once it's ready
+  const colors = useMemo(() => {
     const arr = new Float32Array(totalChars * 3);
     for (let i = 0; i < totalChars; i++) {
       const d = instanceData[i]!;
-      // Green channel varies by opacity, slight tint variation
       arr[i * 3] = 0;
       arr[i * 3 + 1] = d.opacity;
       arr[i * 3 + 2] = d.opacity * 0.25;
     }
     return arr;
-  }, [instanceData]);
+  }, [instanceData, totalChars]);
+
+  // Wire up instance colors to the mesh
+  useEffect(() => {
+    const mesh = meshRef.current;
+    if (!mesh) return;
+    mesh.instanceColor = new THREE.InstancedBufferAttribute(colors, 3);
+    mesh.instanceColor.needsUpdate = true;
+  }, [colors]);
 
   useFrame((state, delta) => {
     const mesh = meshRef.current;
