@@ -1,7 +1,5 @@
-import fs from "node:fs";
-import path from "node:path";
-
-import matter from "gray-matter";
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 
 export interface BlogPostMeta {
   slug: string;
@@ -19,28 +17,20 @@ function estimateReadingTime(content: string): string {
   return `${minutes} min read`;
 }
 
-/** Parse frontmatter from raw MDX string */
-export function parseFrontmatter(raw: string, slug: string): BlogPostMeta {
-  const { data, content } = matter(raw);
-  return {
-    slug,
-    title: (data.title as string) ?? slug,
-    date: (data.date as string) ?? "unknown",
-    description: (data.description as string) ?? "",
-    tags: (data.tags as string[]) ?? [],
-    readingTime: estimateReadingTime(content),
-  };
-}
-
 /**
  * Load all blog post metadata.
- * Reads .mdx files directly from the filesystem (runs server-side in loaders).
+ * Wrapped in createServerFn so Node-only imports (fs, path, gray-matter)
+ * are stripped from the client bundle.
  */
-export function getAllPosts(): BlogPostMeta[] {
-  const contentDir = path.resolve(import.meta.dirname, "../content/blog");
+export const getAllPosts = createServerFn({ method: "GET" }).handler(async () => {
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+  const matter = (await import("gray-matter")).default;
+
+  const contentDir = path.resolve(import.meta.dirname!, "../content/blog");
 
   if (!fs.existsSync(contentDir)) {
-    return [];
+    return [] as BlogPostMeta[];
   }
 
   const files = fs.readdirSync(contentDir).filter((f) => f.endsWith(".mdx"));
@@ -48,11 +38,48 @@ export function getAllPosts(): BlogPostMeta[] {
   const posts: BlogPostMeta[] = files.map((file) => {
     const raw = fs.readFileSync(path.join(contentDir, file), "utf-8");
     const slug = file.replace(".mdx", "");
-    return parseFrontmatter(raw, slug);
+    const { data, content } = matter(raw);
+    return {
+      slug,
+      title: (data.title as string) ?? slug,
+      date: (data.date as string) ?? "unknown",
+      description: (data.description as string) ?? "",
+      tags: (data.tags as string[]) ?? [],
+      readingTime: estimateReadingTime(content),
+    };
   });
 
   // Sort by date descending
   posts.sort((a, b) => (a.date > b.date ? -1 : 1));
 
   return posts;
-}
+});
+
+/**
+ * Load a single post's metadata by slug.
+ * Server-only: reads the MDX file from disk and extracts frontmatter.
+ */
+export const getPostMeta = createServerFn({ method: "GET" })
+  .inputValidator(z.string())
+  .handler(async ({ data: slug }) => {
+    const fs = await import("node:fs");
+    const path = await import("node:path");
+    const matter = (await import("gray-matter")).default;
+
+    const filePath = path.resolve(import.meta.dirname!, "../content/blog", `${slug}.mdx`);
+
+    if (!fs.existsSync(filePath)) {
+      return null;
+    }
+
+    const raw = fs.readFileSync(filePath, "utf-8");
+    const { data, content } = matter(raw);
+    return {
+      slug,
+      title: (data.title as string) ?? slug,
+      date: (data.date as string) ?? "unknown",
+      description: (data.description as string) ?? "",
+      tags: (data.tags as string[]) ?? [],
+      readingTime: estimateReadingTime(content),
+    } satisfies BlogPostMeta;
+  });
