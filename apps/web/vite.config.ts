@@ -1,18 +1,16 @@
-import path from "node:path";
-
+// apps/web/vite.config.ts
 import tailwindcss from "@tailwindcss/vite";
-import { tanstackRouter } from "@tanstack/router-plugin/vite";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react from "@vitejs/plugin-react";
+import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [tailwindcss(), tanstackRouter({}), react()],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
-  },
   server: {
     port: 3001,
   },
+  resolve: {
+    tsconfigPaths: true,
+  },
+  plugins: [tailwindcss(), tanstackStart(), react(), nitro()],
 });

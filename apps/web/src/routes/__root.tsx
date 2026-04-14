@@ -1,52 +1,51 @@
-import { Toaster } from "@mm-landing/ui/components/sonner";
-import { HeadContent, Outlet, createRootRouteWithContext } from "@tanstack/react-router";
+// apps/web/src/routes/__root.tsx
+/// <reference types="vite/client" />
+import type { ReactNode } from "react";
+import { Outlet, HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-
-import Header from "@/components/header";
 import { ThemeProvider } from "@/components/theme-provider";
 
 import "../index.css";
 
-export interface RouterAppContext {}
-
-export const Route = createRootRouteWithContext<RouterAppContext>()({
-  component: RootComponent,
+export const Route = createRootRoute({
   head: () => ({
     meta: [
-      {
-        title: "mm-landing",
-      },
-      {
-        name: "description",
-        content: "mm-landing is a web application",
-      },
+      { charSet: "utf-8" },
+      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { title: "mm-landing" },
+      { name: "description", content: "Personal developer portfolio" },
     ],
-    links: [
-      {
-        rel: "icon",
-        href: "/favicon.ico",
-      },
-    ],
+    links: [{ rel: "icon", href: "/favicon.ico" }],
   }),
+  component: RootComponent,
 });
 
 function RootComponent() {
   return (
-    <>
-      <HeadContent />
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="dark"
-        disableTransitionOnChange
-        storageKey="vite-ui-theme"
-      >
-        <div className="grid grid-rows-[auto_1fr] h-svh">
-          <Header />
-          <Outlet />
-        </div>
-        <Toaster richColors />
-      </ThemeProvider>
-      <TanStackRouterDevtools position="bottom-left" />
-    </>
+    <RootDocument>
+      <Outlet />
+    </RootDocument>
+  );
+}
+
+function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
+  return (
+    <html lang="en" className="dark">
+      <head>
+        <HeadContent />
+      </head>
+      <body className="bg-[#0a0a0a] text-foreground font-sans antialiased">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          disableTransitionOnChange
+          storageKey="vite-ui-theme"
+        >
+          {children}
+        </ThemeProvider>
+        <TanStackRouterDevtools position="bottom-left" />
+        <Scripts />
+      </body>
+    </html>
   );
 }
