@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 
 import type { BlogPostMeta } from "@/lib/blog";
+import { useLanguageStore } from "@/lib/language-store";
 import { ScrollFadeIn } from "./scroll-fade-in";
 import { SectionHeading } from "./section-heading";
 
@@ -10,12 +11,14 @@ interface BlogPreviewProps {
 }
 
 export function BlogPreview({ posts }: BlogPreviewProps) {
+  const { t } = useLanguageStore();
+
   return (
     <section id="blog" className="relative z-10 py-20 px-4">
       <div className="mx-auto max-w-3xl glass-panel rounded-xl border border-matrix-border p-8">
         <SectionHeading command="cat /blog/latest" />
         {posts.length === 0 ? (
-          <p className="text-center text-foreground/60 py-8">Brak postów... jeszcze.</p>
+          <p className="text-center text-foreground/60 py-8">{t.blog.noPosts}</p>
         ) : (
           <>
             <div className="space-y-3">
@@ -47,7 +50,7 @@ export function BlogPreview({ posts }: BlogPreviewProps) {
                 to="/blog"
                 className="inline-flex items-center gap-2 rounded-md border border-matrix-border px-4 py-2 font-mono text-xs text-matrix/70 hover:text-matrix hover:box-glow transition-all duration-300"
               >
-                Wszystkie posty
+                {t.blog.allPosts}
                 <ArrowRight size={12} />
               </Link>
             </div>

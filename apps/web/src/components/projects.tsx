@@ -1,11 +1,11 @@
 import { ExternalLink, Github } from "lucide-react";
 
+import { useLanguageStore } from "@/lib/language-store";
 import { ScrollFadeIn } from "./scroll-fade-in";
 import { SectionHeading } from "./section-heading";
 
 interface Project {
   name: string;
-  description: string;
   tech: string[];
   github?: string;
   live?: string;
@@ -14,31 +14,29 @@ interface Project {
 const PROJECTS: Project[] = [
   {
     name: "laravel-react",
-    description: "Full-stack aplikacja z Laravelem jako backend i React jako frontend. TypeScript.",
     tech: ["Laravel", "React", "TypeScript"],
     github: "https://github.com/michalmilek/laravel-react",
   },
   {
     name: "music-player",
-    description: "Player muzyczny — odtwarzanie, playlisty, zarządzanie biblioteką utworów.",
     tech: ["React", "TypeScript", "Tailwind CSS"],
     github: "https://github.com/michalmilek/music-player",
   },
   {
     name: "portfolio-neobrutalism",
-    description: "Portfolio w stylu neobrutalizm — odważny design, mocne kolory, typografia.",
     tech: ["React", "CSS", "Neobrutalism"],
     github: "https://github.com/michalmilek/portfolio-neobrutalism",
   },
   {
     name: "mm-landing",
-    description: "Ten landing! Matrix Rain 3D, TanStack Start SSR, MDX blog. Three.js goes brrr.",
     tech: ["React", "Three.js", "TanStack Start", "Tailwind"],
     github: "https://github.com/michalmilek/mm-landing",
   },
 ];
 
 export function Projects() {
+  const { t } = useLanguageStore();
+
   return (
     <section id="projects" className="relative z-10 py-20 px-4">
       <div className="mx-auto max-w-4xl">
@@ -76,15 +74,15 @@ export function Projects() {
                     </div>
                   </div>
                   <p className="text-xs text-foreground/60 mb-3 leading-relaxed">
-                    {project.description}
+                    {t.projects.descriptions[project.name as keyof typeof t.projects.descriptions]}
                   </p>
                   <div className="flex flex-wrap gap-1.5">
-                    {project.tech.map((t) => (
+                    {project.tech.map((tech) => (
                       <span
-                        key={t}
+                        key={tech}
                         className="rounded bg-matrix-dim px-2 py-0.5 font-mono text-[10px] text-matrix/70"
                       >
-                        {t}
+                        {tech}
                       </span>
                     ))}
                   </div>

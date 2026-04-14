@@ -3,18 +3,22 @@ import { Link, useRouter } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
-const SECTIONS = [
-  { id: "about", label: "O mnie" },
-  { id: "experience", label: "Doświadczenie" },
-  { id: "projects", label: "Projekty" },
-  { id: "blog", label: "Blog" },
-  { id: "contact", label: "Kontakt" },
-] as const;
+import { useLanguageStore } from "@/lib/language-store";
+import { LanguageToggle } from "./language-toggle";
 
 export function Nav() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const router = useRouter();
+  const { t } = useLanguageStore();
+
+  const sections = [
+    { id: "about", label: t.nav.about },
+    { id: "experience", label: t.nav.experience },
+    { id: "projects", label: t.nav.projects },
+    { id: "blog", label: t.nav.blog },
+    { id: "contact", label: t.nav.contact },
+  ];
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -54,7 +58,7 @@ export function Nav() {
 
         {/* Desktop links */}
         <div className="hidden md:flex items-center gap-6">
-          {SECTIONS.map(({ id, label }) => (
+          {sections.map(({ id, label }) => (
             <button
               key={id}
               type="button"
@@ -64,6 +68,7 @@ export function Nav() {
               {label}
             </button>
           ))}
+          <LanguageToggle />
         </div>
 
         {/* Mobile hamburger */}
@@ -80,7 +85,7 @@ export function Nav() {
       {/* Mobile menu */}
       {mobileOpen && (
         <div className="md:hidden glass-panel border-t border-matrix-border px-4 py-4 flex flex-col gap-3">
-          {SECTIONS.map(({ id, label }) => (
+          {sections.map(({ id, label }) => (
             <button
               key={id}
               type="button"
@@ -90,6 +95,7 @@ export function Nav() {
               &gt; {label}
             </button>
           ))}
+          <LanguageToggle />
         </div>
       )}
     </nav>

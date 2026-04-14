@@ -1,5 +1,6 @@
 import { Github, Linkedin } from "lucide-react";
 
+import { useLanguageStore } from "@/lib/language-store";
 import { Typewriter } from "./typewriter";
 
 const SOCIAL_LINKS = [
@@ -8,6 +9,8 @@ const SOCIAL_LINKS = [
 ] as const;
 
 export function Hero() {
+  const { t } = useLanguageStore();
+
   return (
     <section
       id="hero"
@@ -18,7 +21,7 @@ export function Hero() {
       </h1>
       <p className="text-lg text-foreground/70 mb-4">Michał Miłek</p>
       <div className="text-sm text-matrix/80 mb-8 h-6">
-        <Typewriter text="Fullstack Developer · Poland" speed={40} delay={500} />
+        <Typewriter text={t.hero.tagline} speed={40} delay={500} />
       </div>
       <div className="flex gap-3">
         {SOCIAL_LINKS.map(({ icon: Icon, href, label }) => (
