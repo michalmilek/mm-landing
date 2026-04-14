@@ -5,20 +5,22 @@ import * as THREE from "three";
 import { useScrollStore } from "@/lib/scroll-store";
 
 const CHARS =
-  "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789@#$%&";
-const COLUMN_COUNT = 60;
-const CHARS_PER_COLUMN = 20;
-const SPREAD_X = 40;
-const DEPTH = 50;
-const FALL_SPEED_MIN = 2;
-const FALL_SPEED_MAX = 8;
+  "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789@#$%&=+<>{}[]";
+
+// Classic matrix: many tight columns, characters stacked vertically
+const COLUMN_COUNT = 80;
+const CHARS_PER_COLUMN = 28;
+const SPREAD_X = 50;
+const FALL_HEIGHT = 60;
+const CHAR_SPACING_Y = 1.0; // vertical distance between chars in a column
+const FALL_SPEED_MIN = 4;
+const FALL_SPEED_MAX = 12;
 
 /**
- * Build a texture atlas: a grid of characters on a single canvas.
- * Each cell is 64×64. Layout: 10 columns, as many rows as needed.
+ * Build a texture atlas with all characters on a single canvas.
  */
 function buildAtlas(chars: string) {
-  const cellSize = 64;
+  const cellSize = 128;
   const cols = 10;
   const rows = Math.ceil(chars.length / cols);
   const canvas = document.createElement("canvas");
@@ -27,7 +29,7 @@ function buildAtlas(chars: string) {
   const ctx = canvas.getContext("2d")!;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.font = `bold ${cellSize * 0.6}px monospace`;
+  ctx.font = `bold ${cellSize * 0.75}px "Courier New", monospace`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillStyle = "#00ff41";
@@ -42,7 +44,7 @@ function buildAtlas(chars: string) {
   texture.minFilter = THREE.LinearFilter;
   texture.magFilter = THREE.LinearFilter;
   texture.needsUpdate = true;
-  return { texture, cols, rows, cellSize, totalCells: chars.length };
+  return { texture, cols, rows, totalCells: chars.length };
 }
 
 interface Particle {
@@ -51,38 +53,49 @@ interface Particle {
   z: number;
   speed: number;
   brightness: number;
+  /** Position within its column (0 = head, higher = tail) */
+  columnPos: number;
 }
 
 export function MatrixRain() {
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-  const columnCount = isMobile ? 25 : COLUMN_COUNT;
-  const charsPerColumn = isMobile ? 12 : CHARS_PER_COLUMN;
+  const columnCount = isMobile ? 35 : COLUMN_COUNT;
+  const charsPerColumn = isMobile ? 16 : CHARS_PER_COLUMN;
   const totalChars = columnCount * charsPerColumn;
 
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const dummy = useMemo(() => new THREE.Object3D(), []);
 
+  // Each column has chars stacked vertically, moving together
   const particles = useMemo<Particle[]>(() => {
     const arr: Particle[] = [];
     for (let col = 0; col < columnCount; col++) {
       const x = (col / columnCount - 0.5) * SPREAD_X;
+      const speed = FALL_SPEED_MIN + Math.random() * (FALL_SPEED_MAX - FALL_SPEED_MIN);
+      const startY = Math.random() * FALL_HEIGHT * 2; // stagger start positions
+      const z = -2 - Math.random() * 15; // keep chars closer to camera
+
       for (let row = 0; row < charsPerColumn; row++) {
+        // Head chars are brightest, tail fades out
+        const headFade = row / charsPerColumn;
+        const brightness = Math.max(0.05, 1.0 - headFade * 0.9);
+
         arr.push({
           x,
-          y: Math.random() * DEPTH - DEPTH / 2,
-          z: -Math.random() * DEPTH,
-          speed: FALL_SPEED_MIN + Math.random() * (FALL_SPEED_MAX - FALL_SPEED_MIN),
-          brightness: 0.15 + Math.random() * 0.85,
+          y: startY - row * CHAR_SPACING_Y,
+          z,
+          speed,
+          brightness,
+          columnPos: row,
         });
       }
     }
     return arr;
   }, [columnCount, charsPerColumn]);
 
-  // Build atlas and UV-offset attribute for random characters per instance
+  // Build atlas + UV offsets
   const { atlas, uvOffsets } = useMemo(() => {
     const a = buildAtlas(CHARS);
-    // Each instance gets a random character → UV offset into the atlas
     const offsets = new Float32Array(totalChars * 2);
     const uSize = 1 / a.cols;
     const vSize = 1 / a.rows;
@@ -91,12 +104,12 @@ export function MatrixRain() {
       const col = charIdx % a.cols;
       const row = Math.floor(charIdx / a.cols);
       offsets[i * 2] = col * uSize;
-      offsets[i * 2 + 1] = 1 - (row + 1) * vSize; // flip Y
+      offsets[i * 2 + 1] = 1 - (row + 1) * vSize;
     }
     return { atlas: a, uvOffsets: offsets };
   }, [totalChars]);
 
-  // Custom shader material for atlas UV + per-instance brightness
+  // Custom shader: atlas UV + per-instance brightness with glow
   const material = useMemo(() => {
     return new THREE.ShaderMaterial({
       uniforms: {
@@ -117,28 +130,37 @@ export function MatrixRain() {
       `,
       fragmentShader: `
         uniform sampler2D uAtlas;
-        uniform vec2 uCellSize;
         varying vec2 vUv;
         varying float vBrightness;
         void main() {
           vec4 tex = texture2D(uAtlas, vUv);
-          if (tex.a < 0.1) discard;
-          gl_FragColor = vec4(tex.rgb * vBrightness, tex.a * vBrightness);
+          if (tex.a < 0.05) discard;
+
+          // Bright head chars get a white-green tint, tail is dimmer green
+          vec3 color = mix(
+            vec3(0.0, 0.6, 0.15),   // dim tail green
+            vec3(0.7, 1.0, 0.8),    // bright head white-green
+            vBrightness * vBrightness
+          );
+
+          float alpha = tex.a * (0.15 + vBrightness * 0.85);
+          gl_FragColor = vec4(color * alpha, alpha);
         }
       `,
       transparent: true,
       depthWrite: false,
+      blending: THREE.AdditiveBlending,
       side: THREE.DoubleSide,
     });
   }, [atlas]);
 
-  // Set up instanced attributes once mesh is available
+  // Attach instanced attributes on first frame
   const attrsSet = useRef(false);
+
   useFrame((state, delta) => {
     const mesh = meshRef.current;
     if (!mesh) return;
 
-    // Attach custom instanced attributes on first frame
     if (!attrsSet.current) {
       const geo = mesh.geometry;
       geo.setAttribute("aUvOffset", new THREE.InstancedBufferAttribute(uvOffsets, 2));
@@ -152,18 +174,30 @@ export function MatrixRain() {
 
     const { scrollProgress, mouseX, mouseY } = useScrollStore.getState();
     const speedMod = 1 - scrollProgress * 0.3;
+    const uvAttr = mesh.geometry.getAttribute("aUvOffset") as THREE.InstancedBufferAttribute;
+    const uSize = 1 / atlas.cols;
+    const vSize = 1 / atlas.rows;
 
     for (let i = 0; i < totalChars; i++) {
       const p = particles[i]!;
 
+      // All chars in a column fall at the same speed
       p.y -= p.speed * delta * speedMod;
 
-      if (p.y < -DEPTH / 2) {
-        p.y = DEPTH / 2 + Math.random() * 10;
+      // When head char wraps around, randomize the character shown
+      if (p.y < -FALL_HEIGHT / 2) {
+        p.y += FALL_HEIGHT + Math.random() * 10;
+
+        // Assign new random character
+        const charIdx = Math.floor(Math.random() * atlas.totalCells);
+        const col = charIdx % atlas.cols;
+        const row = Math.floor(charIdx / atlas.cols);
+        uvAttr.setXY(i, col * uSize, 1 - (row + 1) * vSize);
+        uvAttr.needsUpdate = true;
       }
 
-      dummy.position.set(p.x + mouseX * 0.5, p.y, p.z);
-      dummy.scale.setScalar(0.35);
+      dummy.position.set(p.x + mouseX * 0.3, p.y, p.z);
+      dummy.scale.setScalar(0.6);
       dummy.updateMatrix();
       mesh.setMatrixAt(i, dummy.matrix);
     }
@@ -171,13 +205,13 @@ export function MatrixRain() {
     mesh.instanceMatrix.needsUpdate = true;
 
     // Camera parallax from mouse
-    state.camera.rotation.y = THREE.MathUtils.lerp(state.camera.rotation.y, mouseX * 0.05, 0.05);
-    state.camera.rotation.x = THREE.MathUtils.lerp(state.camera.rotation.x, mouseY * 0.03, 0.05);
+    state.camera.rotation.y = THREE.MathUtils.lerp(state.camera.rotation.y, mouseX * 0.04, 0.03);
+    state.camera.rotation.x = THREE.MathUtils.lerp(state.camera.rotation.x, mouseY * 0.02, 0.03);
   });
 
   return (
     <instancedMesh ref={meshRef} args={[undefined, undefined, totalChars]} material={material}>
-      <planeGeometry args={[0.5, 0.8]} />
+      <planeGeometry args={[0.55, 0.9]} />
     </instancedMesh>
   );
 }
