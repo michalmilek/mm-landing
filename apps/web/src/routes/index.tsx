@@ -6,9 +6,14 @@ import { ContactForm } from "@/components/contact-form";
 import { Experience } from "@/components/experience";
 import { Hero } from "@/components/hero";
 import { Projects } from "@/components/projects";
+import { getAllPosts } from "@/lib/blog";
 
 export const Route = createFileRoute("/")({
   component: LandingPage,
+  loader: async () => {
+    const posts = await getAllPosts();
+    return { posts: posts.slice(0, 3) };
+  },
   head: () => ({
     meta: [
       { title: "tw0j_nick — Developer Portfolio" },
@@ -21,13 +26,15 @@ export const Route = createFileRoute("/")({
 });
 
 function LandingPage() {
+  const { posts } = Route.useLoaderData();
+
   return (
     <>
       <Hero />
       <About />
       <Experience />
       <Projects />
-      <BlogPreview />
+      <BlogPreview posts={posts} />
       <ContactForm />
     </>
   );
