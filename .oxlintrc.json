@@ -58,7 +58,27 @@
     "unicorn/explicit-length-check": "off",
 
     "promise/catch-or-return": "warn",
-    "promise/no-nesting": "warn"
+    "promise/no-nesting": "warn",
+
+    "no-magic-numbers": "off",
+    "react/jsx-max-depth": "off",
+    "sort-keys": "off",
+    "func-style": "off",
+    "import/no-named-export": "off",
+    "react/jsx-props-no-spreading": "off",
+    "import/prefer-default-export": "off",
+    "no-ternary": "off",
+    "import/group-exports": "off",
+    "import/exports-last": "off",
+    "no-inline-comments": "off",
+    "capitalized-comments": "off",
+    "import/no-namespace": "off",
+    "id-length": "off",
+    "max-lines-per-function": "off",
+    "max-statements": "off",
+    "import/no-nodejs-modules": "off",
+    "import/consistent-type-specifier-style": "off",
+    "import/no-unassigned-import": "off"
   },
   "env": {
     "builtin": true,

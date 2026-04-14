@@ -1,5 +1,5 @@
-import { cn } from "@mm-landing/ui/lib/utils";
 import { type ReactNode, useEffect, useRef, useState } from "react";
+import { cn } from "@mm-landing/ui/lib/utils";
 
 interface ScrollFadeInProps {
   children: ReactNode;
@@ -13,7 +13,9 @@ export function ScrollFadeIn({ children, className, delay = 0 }: ScrollFadeInPro
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el) {
+      return;
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {

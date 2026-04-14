@@ -1,6 +1,6 @@
-import { useLanguageStore } from "@/lib/language-store";
 import { ScrollFadeIn } from "./scroll-fade-in";
 import { SectionHeading } from "./section-heading";
+import { useLanguageStore } from "@/lib/language-store";
 
 export function About() {
   const { t } = useLanguageStore();

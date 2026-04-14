@@ -1,6 +1,6 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { type ComponentType, Suspense, lazy, useMemo } from "react";
+import { Link, createFileRoute, notFound } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
-import { type ComponentType, lazy, Suspense, useMemo } from "react";
 
 import { SectionHeading } from "@/components/section-heading";
 import { getPostMeta } from "@/lib/blog";
@@ -43,6 +43,8 @@ export const Route = createFileRoute("/blog/$slug")({
   ),
 });
 
+const LoadingFallback = <p className="font-mono text-matrix/40 animate-pulse">Ładowanie...</p>;
+
 function BlogPost() {
   const { meta } = Route.useLoaderData();
 
@@ -51,7 +53,11 @@ function BlogPost() {
     () =>
       lazy(async () => {
         const modulePath = `/src/content/blog/${meta.slug}.mdx`;
-        const mod = await mdxModules[modulePath]!();
+        const loader = mdxModules[modulePath];
+        if (!loader) {
+          throw new Error(`MDX module not found: ${modulePath}`);
+        }
+        const mod = await loader();
         return { default: mod.default };
       }),
     [meta.slug],
@@ -90,9 +96,7 @@ function BlogPost() {
           </div>
 
           <div className="prose prose-invert prose-sm max-w-none prose-headings:font-mono prose-headings:text-matrix prose-code:text-matrix prose-a:text-matrix prose-pre:bg-[#0d0d0d] prose-pre:border prose-pre:border-matrix-border">
-            <Suspense
-              fallback={<p className="font-mono text-matrix/40 animate-pulse">Ładowanie...</p>}
-            >
+            <Suspense fallback={LoadingFallback}>
               <MdxContent />
             </Suspense>
           </div>

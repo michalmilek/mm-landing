@@ -1,7 +1,7 @@
 import { Github, Linkedin } from "lucide-react";
 
-import { useLanguageStore } from "@/lib/language-store";
 import { Typewriter } from "./typewriter";
+import { useLanguageStore } from "@/lib/language-store";
 
 const SOCIAL_LINKS = [
   { icon: Github, href: "https://github.com/michalmilek", label: "GitHub" },

@@ -1,23 +1,21 @@
 /// <reference types="vite/client" />
-import type { ReactNode } from "react";
-import { Outlet, HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-import { lazy, Suspense, useEffect } from "react";
-
-import { ThemeProvider } from "@/components/theme-provider";
+import "../index.css";
+import { HeadContent, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
+import { type ReactNode, Suspense, lazy, useEffect } from "react";
 import { Nav } from "@/components/nav";
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { ThemeProvider } from "@/components/theme-provider";
 import { bindScrollAndMouse } from "@/lib/scroll-store";
 
-import "../index.css";
-
-const MatrixCanvas = lazy(() =>
-  import("@/components/matrix-canvas").then((m) => ({ default: m.MatrixCanvas })),
-);
+const MatrixCanvas = lazy(async () => {
+  const m = await import("@/components/matrix-canvas");
+  return { default: m.MatrixCanvas };
+});
 
 export const Route = createRootRoute({
   head: () => ({
     meta: [
-      { charSet: "utf-8" },
+      { charSet: "utf8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Michał Miłek — Fullstack Developer" },
       { name: "description", content: "Personal developer portfolio" },
@@ -36,9 +34,7 @@ function RootComponent() {
 }
 
 function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
-  useEffect(() => {
-    return bindScrollAndMouse();
-  }, []);
+  useEffect(() => bindScrollAndMouse(), []);
 
   return (
     <html lang="en" className="dark">

@@ -1,11 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
-
 import { About } from "@/components/about";
 import { BlogPreview } from "@/components/blog-preview";
 import { ContactForm } from "@/components/contact-form";
 import { Experience } from "@/components/experience";
 import { Hero } from "@/components/hero";
 import { Projects } from "@/components/projects";
+import { createFileRoute } from "@tanstack/react-router";
 import { getAllPosts } from "@/lib/blog";
 
 export const Route = createFileRoute("/")({

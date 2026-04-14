@@ -1,10 +1,9 @@
-import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
-
 import type { BlogPostMeta } from "@/lib/blog";
-import { useLanguageStore } from "@/lib/language-store";
+import { Link } from "@tanstack/react-router";
 import { ScrollFadeIn } from "./scroll-fade-in";
 import { SectionHeading } from "./section-heading";
+import { useLanguageStore } from "@/lib/language-store";
 
 interface BlogPreviewProps {
   posts: BlogPostMeta[];

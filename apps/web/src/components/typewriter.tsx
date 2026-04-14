@@ -1,5 +1,5 @@
-import { cn } from "@mm-landing/ui/lib/utils";
 import { useEffect, useState } from "react";
+import { cn } from "@mm-landing/ui/lib/utils";
 
 interface TypewriterProps {
   text: string;
@@ -25,7 +25,9 @@ export function Typewriter({
   }, [delay]);
 
   useEffect(() => {
-    if (!started) return;
+    if (!started) {
+      return;
+    }
 
     if (displayedText.length < text.length) {
       const timer = setTimeout(() => {

@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import { Link, createFileRoute } from "@tanstack/react-router";
 
-import { SectionHeading } from "@/components/section-heading";
 import { ScrollFadeIn } from "@/components/scroll-fade-in";
+import { SectionHeading } from "@/components/section-heading";
 import { getAllPosts } from "@/lib/blog";
 
 export const Route = createFileRoute("/blog/")({

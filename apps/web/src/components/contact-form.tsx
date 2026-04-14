@@ -1,8 +1,7 @@
-import { Send } from "lucide-react";
-
-import { useLanguageStore } from "@/lib/language-store";
 import { ScrollFadeIn } from "./scroll-fade-in";
 import { SectionHeading } from "./section-heading";
+import { Send } from "lucide-react";
+import { useLanguageStore } from "@/lib/language-store";
 
 export function ContactForm() {
   const { t } = useLanguageStore();

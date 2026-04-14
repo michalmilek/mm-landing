@@ -1,5 +1,5 @@
+import { type Locale, type Translations, translations } from "./translations";
 import { create } from "zustand";
-import { translations, type Locale, type Translations } from "./translations";
 
 interface LanguageStore {
   locale: Locale;

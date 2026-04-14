@@ -1,10 +1,9 @@
-import { cn } from "@mm-landing/ui/lib/utils";
 import { Link, useRouter } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-
-import { useLanguageStore } from "@/lib/language-store";
 import { LanguageToggle } from "./language-toggle";
+import { cn } from "@mm-landing/ui/lib/utils";
+import { useLanguageStore } from "@/lib/language-store";
 
 export function Nav() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -27,14 +26,13 @@ export function Nav() {
   }, []);
 
   const scrollToSection = useCallback(
-    (id: string) => {
+    async (id: string) => {
       // If on a different page, navigate home first
       if (router.state.location.pathname !== "/") {
-        void router.navigate({ to: "/" }).then(() => {
-          setTimeout(() => {
-            document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-          }, 100);
-        });
+        await router.navigate({ to: "/" });
+        setTimeout(() => {
+          document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+        }, 100);
       } else {
         document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
       }
@@ -62,7 +60,9 @@ export function Nav() {
             <button
               key={id}
               type="button"
-              onClick={() => scrollToSection(id)}
+              onClick={() => {
+                void scrollToSection(id);
+              }}
               className="font-mono text-xs text-matrix/70 hover:text-matrix transition-colors"
             >
               {label}
@@ -89,7 +89,9 @@ export function Nav() {
             <button
               key={id}
               type="button"
-              onClick={() => scrollToSection(id)}
+              onClick={() => {
+                void scrollToSection(id);
+              }}
               className="font-mono text-sm text-matrix/70 hover:text-matrix text-left transition-colors"
             >
               &gt; {label}

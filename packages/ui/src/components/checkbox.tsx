@@ -1,8 +1,8 @@
 "use client";
 
+import { CheckIcon } from "lucide-react";
 import { Checkbox as CheckboxPrimitive } from "@base-ui/react/checkbox";
 import { cn } from "@mm-landing/ui/lib/utils";
-import { CheckIcon } from "lucide-react";
 
 function Checkbox({ className, ...props }: CheckboxPrimitive.Root.Props) {
   return (

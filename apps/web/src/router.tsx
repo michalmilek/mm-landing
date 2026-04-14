@@ -1,7 +1,6 @@
 // apps/web/src/router.tsx
-import { createRouter as createTanStackRouter } from "@tanstack/react-router";
-
 import Loader from "./components/loader";
+import { createRouter as createTanStackRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 
 export function getRouter() {

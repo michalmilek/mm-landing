@@ -1,6 +1,6 @@
-import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
 import * as THREE from "three";
+import { useMemo, useRef } from "react";
+import { useFrame } from "@react-three/fiber";
 
 import { useScrollStore } from "@/lib/scroll-store";
 
@@ -12,7 +12,7 @@ const COLUMN_COUNT = 80;
 const CHARS_PER_COLUMN = 28;
 const SPREAD_X = 50;
 const FALL_HEIGHT = 60;
-const CHAR_SPACING_Y = 1.0; // vertical distance between chars in a column
+const CHAR_SPACING_Y = 1; // vertical distance between chars in a column
 const FALL_SPEED_MIN = 4;
 const FALL_SPEED_MAX = 12;
 
@@ -26,7 +26,10 @@ function buildAtlas(chars: string) {
   const canvas = document.createElement("canvas");
   canvas.width = cellSize * cols;
   canvas.height = cellSize * rows;
-  const ctx = canvas.getContext("2d")!;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("Cannot get 2d context");
+  }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.font = `bold ${cellSize * 0.75}px "Courier New", monospace`;
@@ -35,9 +38,14 @@ function buildAtlas(chars: string) {
   ctx.fillStyle = "#00ff41";
 
   for (let i = 0; i < chars.length; i++) {
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-    ctx.fillText(chars[i]!, col * cellSize + cellSize / 2, row * cellSize + cellSize / 2);
+    const char = chars[i];
+    if (char !== undefined) {
+      ctx.fillText(
+        char,
+        (i % cols) * cellSize + cellSize / 2,
+        Math.floor(i / cols) * cellSize + cellSize / 2,
+      );
+    }
   }
 
   const texture = new THREE.CanvasTexture(canvas);
@@ -78,7 +86,7 @@ export function MatrixRain() {
       for (let row = 0; row < charsPerColumn; row++) {
         // Head chars are brightest, tail fades out
         const headFade = row / charsPerColumn;
-        const brightness = Math.max(0.05, 1.0 - headFade * 0.9);
+        const brightness = Math.max(0.05, 1 - headFade * 0.9);
 
         arr.push({
           x,
@@ -110,63 +118,70 @@ export function MatrixRain() {
   }, [totalChars]);
 
   // Custom shader: atlas UV + per-instance brightness with glow
-  const material = useMemo(() => {
-    return new THREE.ShaderMaterial({
-      uniforms: {
-        uAtlas: { value: atlas.texture },
-        uCellSize: { value: new THREE.Vector2(1 / atlas.cols, 1 / atlas.rows) },
-      },
-      vertexShader: `
-        uniform vec2 uCellSize;
-        attribute vec2 aUvOffset;
-        attribute float aBrightness;
-        varying vec2 vUv;
-        varying float vBrightness;
-        void main() {
-          vUv = uv * uCellSize + aUvOffset;
-          vBrightness = aBrightness;
-          gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform sampler2D uAtlas;
-        varying vec2 vUv;
-        varying float vBrightness;
-        void main() {
-          vec4 tex = texture2D(uAtlas, vUv);
-          if (tex.a < 0.05) discard;
+  const material = useMemo(
+    () =>
+      new THREE.ShaderMaterial({
+        uniforms: {
+          uAtlas: { value: atlas.texture },
+          uCellSize: { value: new THREE.Vector2(1 / atlas.cols, 1 / atlas.rows) },
+        },
+        vertexShader: `
+      uniform vec2 uCellSize;
+      attribute vec2 aUvOffset;
+      attribute float aBrightness;
+      varying vec2 vUv;
+      varying float vBrightness;
+      void main() {
+        vUv = uv * uCellSize + aUvOffset;
+        vBrightness = aBrightness;
+        gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.0);
+      }
+    `,
+        fragmentShader: `
+      uniform sampler2D uAtlas;
+      varying vec2 vUv;
+      varying float vBrightness;
+      void main() {
+        vec4 tex = texture2D(uAtlas, vUv);
+        if (tex.a < 0.05) discard;
 
-          // Bright head chars get a white-green tint, tail is dimmer green
-          vec3 color = mix(
-            vec3(0.0, 0.6, 0.15),   // dim tail green
-            vec3(0.7, 1.0, 0.8),    // bright head white-green
-            vBrightness * vBrightness
-          );
+        // Bright head chars get a white-green tint, tail is dimmer green
+        vec3 color = mix(
+          vec3(0.0, 0.6, 0.15),   // dim tail green
+          vec3(0.7, 1.0, 0.8),    // bright head white-green
+          vBrightness * vBrightness
+        );
 
-          float alpha = tex.a * (0.15 + vBrightness * 0.85);
-          gl_FragColor = vec4(color * alpha, alpha);
-        }
-      `,
-      transparent: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      side: THREE.DoubleSide,
-    });
-  }, [atlas]);
+        float alpha = tex.a * (0.15 + vBrightness * 0.85);
+        gl_FragColor = vec4(color * alpha, alpha);
+      }
+    `,
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
+      }),
+    [atlas],
+  );
 
   // Attach instanced attributes on first frame
   const attrsSet = useRef(false);
 
   useFrame((state, delta) => {
     const mesh = meshRef.current;
-    if (!mesh) return;
+    if (!mesh) {
+      return;
+    }
 
     if (!attrsSet.current) {
       const geo = mesh.geometry;
       geo.setAttribute("aUvOffset", new THREE.InstancedBufferAttribute(uvOffsets, 2));
       const brightnessArr = new Float32Array(totalChars);
       for (let i = 0; i < totalChars; i++) {
-        brightnessArr[i] = particles[i]!.brightness;
+        const particle = particles[i];
+        if (particle !== undefined) {
+          brightnessArr[i] = particle.brightness;
+        }
       }
       geo.setAttribute("aBrightness", new THREE.InstancedBufferAttribute(brightnessArr, 1));
       attrsSet.current = true;
@@ -179,27 +194,28 @@ export function MatrixRain() {
     const vSize = 1 / atlas.rows;
 
     for (let i = 0; i < totalChars; i++) {
-      const p = particles[i]!;
+      const p = particles[i];
+      if (p !== undefined) {
+        // All chars in a column fall at the same speed
+        p.y -= p.speed * delta * speedMod;
 
-      // All chars in a column fall at the same speed
-      p.y -= p.speed * delta * speedMod;
+        // When head char wraps around, randomize the character shown
+        if (p.y < -FALL_HEIGHT / 2) {
+          p.y += FALL_HEIGHT + Math.random() * 10;
 
-      // When head char wraps around, randomize the character shown
-      if (p.y < -FALL_HEIGHT / 2) {
-        p.y += FALL_HEIGHT + Math.random() * 10;
+          // Assign new random character
+          const charIdx = Math.floor(Math.random() * atlas.totalCells);
+          const col = charIdx % atlas.cols;
+          const row = Math.floor(charIdx / atlas.cols);
+          uvAttr.setXY(i, col * uSize, 1 - (row + 1) * vSize);
+          uvAttr.needsUpdate = true;
+        }
 
-        // Assign new random character
-        const charIdx = Math.floor(Math.random() * atlas.totalCells);
-        const col = charIdx % atlas.cols;
-        const row = Math.floor(charIdx / atlas.cols);
-        uvAttr.setXY(i, col * uSize, 1 - (row + 1) * vSize);
-        uvAttr.needsUpdate = true;
+        dummy.position.set(p.x + mouseX * 0.3, p.y, p.z);
+        dummy.scale.setScalar(0.6);
+        dummy.updateMatrix();
+        mesh.setMatrixAt(i, dummy.matrix);
       }
-
-      dummy.position.set(p.x + mouseX * 0.3, p.y, p.z);
-      dummy.scale.setScalar(0.6);
-      dummy.updateMatrix();
-      mesh.setMatrixAt(i, dummy.matrix);
     }
 
     mesh.instanceMatrix.needsUpdate = true;

@@ -25,9 +25,10 @@ function estimateReadingTime(content: string): string {
 export const getAllPosts = createServerFn({ method: "GET" }).handler(async () => {
   const fs = await import("node:fs");
   const path = await import("node:path");
-  const matter = (await import("gray-matter")).default;
+  const grayMatter = await import("gray-matter");
+  const matter = grayMatter.default;
 
-  const contentDir = path.resolve(import.meta.dirname!, "../content/blog");
+  const contentDir = path.resolve(import.meta.dirname ?? "", "../content/blog");
 
   if (!fs.existsSync(contentDir)) {
     return [] as BlogPostMeta[];
@@ -36,7 +37,7 @@ export const getAllPosts = createServerFn({ method: "GET" }).handler(async () =>
   const files = fs.readdirSync(contentDir).filter((f) => f.endsWith(".mdx"));
 
   const posts: BlogPostMeta[] = files.map((file) => {
-    const raw = fs.readFileSync(path.join(contentDir, file), "utf-8");
+    const raw = fs.readFileSync(path.join(contentDir, file), "utf8");
     const slug = file.replace(".mdx", "");
     const { data, content } = matter(raw);
     return {
@@ -64,15 +65,16 @@ export const getPostMeta = createServerFn({ method: "GET" })
   .handler(async ({ data: slug }) => {
     const fs = await import("node:fs");
     const path = await import("node:path");
-    const matter = (await import("gray-matter")).default;
+    const grayMatter = await import("gray-matter");
+    const matter = grayMatter.default;
 
-    const filePath = path.resolve(import.meta.dirname!, "../content/blog", `${slug}.mdx`);
+    const filePath = path.resolve(import.meta.dirname ?? "", "../content/blog", `${slug}.mdx`);
 
     if (!fs.existsSync(filePath)) {
       return null;
     }
 
-    const raw = fs.readFileSync(filePath, "utf-8");
+    const raw = fs.readFileSync(filePath, "utf8");
     const { data, content } = matter(raw);
     return {
       slug,
