@@ -104,6 +104,7 @@ export function MatrixRain() {
         uCellSize: { value: new THREE.Vector2(1 / atlas.cols, 1 / atlas.rows) },
       },
       vertexShader: `
+        uniform vec2 uCellSize;
         attribute vec2 aUvOffset;
         attribute float aBrightness;
         varying vec2 vUv;
