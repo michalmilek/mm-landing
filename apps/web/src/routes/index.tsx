@@ -16,10 +16,10 @@ export const Route = createFileRoute("/")({
   },
   head: () => ({
     meta: [
-      { title: "Michał Miłek — Frontend Developer" },
+      { title: "Michał Miłek — Fullstack Developer" },
       {
         name: "description",
-        content: "Frontend Developer · React · TypeScript · Poland",
+        content: "Fullstack Developer · React · TypeScript · Poland",
       },
     ],
   }),

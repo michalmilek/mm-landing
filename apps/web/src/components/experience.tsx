@@ -11,7 +11,7 @@ interface TimelineEntry {
 const TIMELINE: TimelineEntry[] = [
   {
     period: "2023 — teraz",
-    role: "Frontend Developer",
+    role: "Fullstack Developer",
     company: "Projekty komercyjne & freelance",
     tech: ["React", "Next.js", "TypeScript", "Tailwind CSS", "React Native"],
   },

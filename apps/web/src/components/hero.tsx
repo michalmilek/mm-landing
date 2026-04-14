@@ -19,7 +19,7 @@ export function Hero() {
       <p className="text-lg text-foreground/70 mb-4">Michał Miłek</p>
       <div className="text-sm text-matrix/80 mb-8 h-6">
         <Typewriter
-          text="Frontend Developer · React · TypeScript · Poland"
+          text="Fullstack Developer · React · TypeScript · Poland"
           speed={40}
           delay={500}
         />

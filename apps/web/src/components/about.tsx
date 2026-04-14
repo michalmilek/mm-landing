@@ -10,7 +10,7 @@ export function About() {
           <div className="flex flex-col md:flex-row gap-8">
             <div className="flex-1 space-y-4 text-foreground/80 leading-relaxed">
               <p>
-                Cześć! Jestem Michał — frontend developer z Rzeszowa. Specjalizuję się w React,
+                Cześć! Jestem Michał — fullstack developer z Rzeszowa. Specjalizuję się w React,
                 TypeScript i Next.js. Buduję szybkie, responsywne aplikacje webowe z naciskiem na UX
                 i czysty kod.
               </p>
