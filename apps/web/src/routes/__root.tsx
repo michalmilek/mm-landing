@@ -34,12 +34,12 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
       <head>
         <HeadContent />
       </head>
-      <body className="bg-[#0a0a0a] text-foreground font-sans antialiased">
+      <body className="bg-background text-foreground font-sans antialiased">
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
           disableTransitionOnChange
-          storageKey="vite-ui-theme"
+          storageKey="mm-landing-theme"
         >
           {children}
         </ThemeProvider>
