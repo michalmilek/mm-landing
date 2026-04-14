@@ -42,10 +42,11 @@
     "typescript": "^5"
   },
   "lint-staged": {
-    "*": [
+    "*.{js,jsx,ts,tsx,mjs,cjs}": [
       "oxlint",
       "oxfmt --write"
-    ]
+    ],
+    "*.{css,json,md}": []
   },
   "packageManager": "bun@1.3.9"
 }
